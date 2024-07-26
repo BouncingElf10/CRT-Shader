@@ -11,7 +11,7 @@ uniform vec2 screenSize;
 float colorRed;
 float colorGreen;
 float colorBlue;
-
+//main
 void main() {
     vec4 color = texture(colortex0, texCoord);
 
