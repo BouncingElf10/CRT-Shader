@@ -1,6 +1,5 @@
 #version 330 compatibility
 
-//main
 in vec2 texCoord;
 
 uniform sampler2D colortex0; // The main color buffer
@@ -8,21 +7,29 @@ uniform sampler2D colortex0; // The main color buffer
 layout(location = 0) out vec4 fragColor;
 uniform vec2 screenSize;
 
-float colorRed;
-float colorGreen;
-float colorBlue;
-//main
 void main() {
-    float Pixels = 3240.0;
-    float dx = 9.0 * (1.0 / Pixels);
-    float dy = 16.0 * (1.0 / Pixels);
-    vec2 Coord = vec2(dx * floor(texCoord.x / dx), dy * floor(texCoord.y / dy));
+    float pixelArea = 6;
+    // Calculate the size of each "pixel" in texture coordinates
+    vec2 pixelSize = vec2(pixelArea) / vec2(2560, 1440);
 
-    vec4 color = texture(colortex0, Coord);
+    // Calculate the position within the current "pixel"
+    vec2 pixelPos = mod(texCoord, pixelSize);
 
-    float luminance = (color.r + color.g + color.b) / 3.0;
-    float luminanceWierd = 0.3 * color.r + 0.59 * color.g + 0.11 * color.b;
+    // Round the texture coordinates to the nearest "pixel"
+    vec2 roundedCoord = floor(texCoord / pixelSize) * pixelSize;
 
-    fragColor = vec4(color.r, color.g, color.b, color.a);
-    fragColor = vec4(luminance, luminance, luminance, color.a);
+    vec4 color = texture(colortex0, roundedCoord);
+
+    // First third (rows 0-2, indices 0-2)
+    if (pixelPos.y < 3.0 * pixelSize.y / 9.0) {
+        fragColor = color * vec4(1.0, 0.0, 0.0, 1.0); // Red tint
+    }
+    // Second third (rows 3-5, indices 3-5)
+    else if (pixelPos.y < 6.0 * pixelSize.y / 9.0) {
+        fragColor = color * vec4(0.0, 1.0, 0.0, 1.0); // Green tint
+    }
+    // Last third (rows 6-8, indices 6-8)
+    else {
+        fragColor = color * vec4(0.0, 0.0, 1.0, 1.0); // Blue tint
+    }
 }
