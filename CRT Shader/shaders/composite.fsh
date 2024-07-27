@@ -27,10 +27,12 @@ void main() {
     vec2 distortedTexCoord = applyLensDistortion(zoomedCoord);
 
     // Check if the distorted coordinates are within bounds
-    if (distortedTexCoord.x < 0.0 || distortedTexCoord.x > 1.0 ||
-    distortedTexCoord.y < 0.0 || distortedTexCoord.y > 1.0) {
-        fragColor = vec4(0.0, 0.0, 0.0, 1.0); // Black for out of bounds
-        return;
+    if (true) { // Turn off and on black borders
+        if (distortedTexCoord.x < 0.0 || distortedTexCoord.x > 1.0 ||
+        distortedTexCoord.y < 0.0 || distortedTexCoord.y > 1.0) {
+            fragColor = vec4(0.0, 0.0, 0.0, 1.0); // Black for out of bounds
+            return;
+        }
     }
 
     float pixelArea = 3;
