@@ -12,6 +12,8 @@ uniform float distortionStrength = 1.5;
 uniform float zoomFactor = 1.25;
 uniform float maxChromaticAberrationStrength = 0.005;
 uniform float maxColorBleedStrength = 0.001;
+uniform float scanLineIntensity = 0.1;
+uniform float scanLineCount = 1080.0;
 
 vec2 applyLensDistortion(vec2 uv) {
     vec2 center = vec2(0.5);
@@ -29,7 +31,11 @@ vec4 sampleWithColorBleed(sampler2D tex, vec2 uv, vec2 direction, float strength
 
 float getEdgeFactor(vec2 uv) {
     vec2 center = vec2(0.5);
-    return length(uv - center) * 2.0; // This will be 0 at the center and 1 at the corners
+    return length(uv - center) * 1.3;
+}
+
+float getScanLineIntensity(vec2 uv) {
+    return sin(uv.y * scanLineCount * 3.14159 * 2.0) * 0.5 + 0.5;
 }
 
 void main() {
@@ -40,13 +46,14 @@ void main() {
     vec2 distortedTexCoord = applyLensDistortion(zoomedCoord);
 
     // Check if the distorted coordinates are within bounds
-    if (true) {
+    if (false) { // Turn on and off
         if (distortedTexCoord.x < 0.0 || distortedTexCoord.x > 1.0 ||
         distortedTexCoord.y < 0.0 || distortedTexCoord.y > 1.0) {
             fragColor = vec4(0.0, 0.0, 0.0, 1.0); // Black for out of bounds
             return;
         }
     }
+
 
     float pixelArea = 3;
     vec2 pixelSize = vec2(pixelArea) / vec2(2560, 1440);
@@ -68,6 +75,12 @@ void main() {
     float b = sampleWithColorBleed(colortex0, roundedCoord + blueOffset, vec2(-1, 0), colorBleedStrength).b;
 
     vec4 color = vec4(r, g, b, 1.0);
+
+    // Apply scan lines
+    if (false) {
+        float scanLine = getScanLineIntensity(distortedTexCoord);
+        color.rgb *= 1.0 - (scanLineIntensity * (1.0 - scanLine));
+    }
 
     float borderThickness = 0.1;
     bool isBorder = (pixelPos.x < borderThickness * pixelSize.x || pixelPos.x > (1.0 - borderThickness) * pixelSize.x ||
