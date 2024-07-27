@@ -8,8 +8,10 @@ layout(location = 0) out vec4 fragColor;
 uniform vec2 screenSize;
 
 // Adjust these values to fine-tune the effect
-uniform float distortionStrength = 2;
-uniform float zoomFactor = 1.3;
+uniform float distortionStrength = 1.5;
+uniform float zoomFactor = 1.25;
+uniform float maxChromaticAberrationStrength = 0.005;
+uniform float maxColorBleedStrength = 0.001;
 
 vec2 applyLensDistortion(vec2 uv) {
     vec2 center = vec2(0.5);
@@ -17,6 +19,17 @@ vec2 applyLensDistortion(vec2 uv) {
     float distSq = dot(distortedUV, distortedUV);
     distortedUV *= 1.0 + distortionStrength * distSq;
     return distortedUV + center;
+}
+
+vec4 sampleWithColorBleed(sampler2D tex, vec2 uv, vec2 direction, float strength) {
+    vec4 color = texture(tex, uv);
+    vec4 bleed = texture(tex, uv + direction * strength);
+    return mix(color, bleed, 0.5);
+}
+
+float getEdgeFactor(vec2 uv) {
+    vec2 center = vec2(0.5);
+    return length(uv - center) * 2.0; // This will be 0 at the center and 1 at the corners
 }
 
 void main() {
@@ -27,7 +40,7 @@ void main() {
     vec2 distortedTexCoord = applyLensDistortion(zoomedCoord);
 
     // Check if the distorted coordinates are within bounds
-    if (true) { // Turn off and on black borders
+    if (true) {
         if (distortedTexCoord.x < 0.0 || distortedTexCoord.x > 1.0 ||
         distortedTexCoord.y < 0.0 || distortedTexCoord.y > 1.0) {
             fragColor = vec4(0.0, 0.0, 0.0, 1.0); // Black for out of bounds
@@ -41,7 +54,20 @@ void main() {
     vec2 pixelPos = mod(texCoord, pixelSize);
     vec2 roundedCoord = floor(distortedTexCoord / pixelSize) * pixelSize;
 
-    vec4 color = texture(colortex0, roundedCoord);
+    // Calculate edge factor
+    float edgeFactor = getEdgeFactor(distortedTexCoord);
+
+    // Apply chromatic aberration and color bleed with increasing strength towards edges
+    float chromaticAberrationStrength = maxChromaticAberrationStrength * edgeFactor;
+    float colorBleedStrength = maxColorBleedStrength * edgeFactor;
+
+    vec2 redOffset = vec2(chromaticAberrationStrength, 0);
+    vec2 blueOffset = vec2(-chromaticAberrationStrength, 0);
+    float r = sampleWithColorBleed(colortex0, roundedCoord + redOffset, vec2(1, 0), colorBleedStrength).r;
+    float g = sampleWithColorBleed(colortex0, roundedCoord, vec2(0, 1), colorBleedStrength).g;
+    float b = sampleWithColorBleed(colortex0, roundedCoord + blueOffset, vec2(-1, 0), colorBleedStrength).b;
+
+    vec4 color = vec4(r, g, b, 1.0);
 
     float borderThickness = 0.1;
     bool isBorder = (pixelPos.x < borderThickness * pixelSize.x || pixelPos.x > (1.0 - borderThickness) * pixelSize.x ||
