@@ -1,0 +1,10 @@
+option.PIXEL_AREA=Pixel Size
+option.BLACK_OUT_OF_BOUNDS=Black Border
+option.DISTORTION_STRENGTH=Distortion Strength
+option.ZOOM_FACTOR=Zoom Factor
+option.MAX_CHROMATIC_ABERRATION=Chromatic Aberration
+option.MAX_COLOR_BLEED=Color Bleed
+option.RED_STRENGTH=Red Pixel Strength
+option.GREEN_STRENGTH=Green Pixel Strength
+option.BLUE_STRENGTH=Blue Pixel Strength
+

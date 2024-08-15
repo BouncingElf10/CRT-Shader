@@ -1,5 +1,15 @@
 #version 330 compatibility
 
+#define DISTORTION_STRENGTH 1.5 // [0.0 0.5 1.0 1.5 2.0 2.5 3.0]
+#define ZOOM_FACTOR 1.2 // [0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0 2.1 2.2 2.3 2.4 2.5]
+#define MAX_CHROMATIC_ABERRATION 5 // [0 1 2 3 4 5 6 7 8 9 10]
+#define MAX_COLOR_BLEED 1.0 // [0.0 0.25 0.5 0.75 1.0 1.25 1.5 1.75 2.0]
+#define PIXEL_AREA 3 // [3 4 5 6 7 8 9 10 11 12]
+#define BLACK_OUT_OF_BOUNDS false // [true false]
+#define RED_STRENGTH 1 // [0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0]
+#define GREEN_STRENGTH 1 // [0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0]
+#define BLUE_STRENGTH 1 // [0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0]
+
 in vec2 texCoord;
 
 uniform sampler2D colortex0; // The main color buffer
@@ -8,12 +18,10 @@ layout(location = 0) out vec4 fragColor;
 uniform vec2 screenSize;
 
 // Adjust these values to fine-tune the effect
-uniform float distortionStrength = 1.5;
-uniform float zoomFactor = 1.25;
-uniform float maxChromaticAberrationStrength = 0.005;
-uniform float maxColorBleedStrength = 0.001;
-uniform float scanLineIntensity = 0.1;
-uniform float scanLineCount = 1080.0;
+uniform float distortionStrength = DISTORTION_STRENGTH;
+uniform float zoomFactor = ZOOM_FACTOR;
+uniform float maxChromaticAberrationStrength = MAX_CHROMATIC_ABERRATION / 1000;
+uniform float maxColorBleedStrength = MAX_COLOR_BLEED / 1000;
 
 vec2 applyLensDistortion(vec2 uv) {
     vec2 center = vec2(0.5);
@@ -34,10 +42,6 @@ float getEdgeFactor(vec2 uv) {
     return length(uv - center) * 1.3;
 }
 
-float getScanLineIntensity(vec2 uv) {
-    return sin(uv.y * scanLineCount * 3.14159 * 2.0) * 0.5 + 0.5;
-}
-
 void main() {
     // Apply zoom
     vec2 zoomedCoord = (texCoord - 0.5) / zoomFactor + 0.5;
@@ -46,7 +50,7 @@ void main() {
     vec2 distortedTexCoord = applyLensDistortion(zoomedCoord);
 
     // Check if the distorted coordinates are within bounds
-    if (false) { // Turn on and off
+    if (BLACK_OUT_OF_BOUNDS) { // Turn on and off
         if (distortedTexCoord.x < 0.0 || distortedTexCoord.x > 1.0 ||
         distortedTexCoord.y < 0.0 || distortedTexCoord.y > 1.0) {
             fragColor = vec4(0.0, 0.0, 0.0, 1.0); // Black for out of bounds
@@ -55,7 +59,7 @@ void main() {
     }
 
 
-    float pixelArea = 3;
+    float pixelArea = PIXEL_AREA;
     vec2 pixelSize = vec2(pixelArea) / vec2(2560, 1440);
 
     vec2 pixelPos = mod(texCoord, pixelSize);
@@ -76,12 +80,6 @@ void main() {
 
     vec4 color = vec4(r, g, b, 1.0);
 
-    // Apply scan lines
-    if (false) {
-        float scanLine = getScanLineIntensity(distortedTexCoord);
-        color.rgb *= 1.0 - (scanLineIntensity * (1.0 - scanLine));
-    }
-
     float borderThickness = 0.1;
     bool isBorder = (pixelPos.x < borderThickness * pixelSize.x || pixelPos.x > (1.0 - borderThickness) * pixelSize.x ||
     pixelPos.y < borderThickness * pixelSize.y || pixelPos.y > (1.0 - borderThickness) * pixelSize.y);
@@ -90,11 +88,11 @@ void main() {
         fragColor = vec4(0.0, 0.0, 0.0, 1.0); // Black border
     } else {
         if (pixelPos.y < 3.0 * pixelSize.y / 9.0) {
-            fragColor = color * vec4(1.0, 0.0, 0.0, 1.0); // Red tint
+            fragColor = color * (vec4(1.0, 0.0, 0.0, 1.0) * vec4(RED_STRENGTH, 1.0, 1.0, 1.0)); // Red tint
         } else if (pixelPos.y < 6.0 * pixelSize.y / 9.0) {
-            fragColor = color * vec4(0.0, 1.0, 0.0, 1.0); // Green tint
+            fragColor = color * (vec4(0.0, 1.0, 0.0, 1.0) * vec4(1.0, GREEN_STRENGTH, 1.0, 1.0)); // Green tint
         } else {
-            fragColor = color * vec4(0.0, 0.0, 1.0, 1.0); // Blue tint
+            fragColor = color * (vec4(0.0, 0.0, 1.0, 1.0) * vec4(1.0, 1.0, BLUE_STRENGTH, 1.0)); // Blue tint
         }
     }
 }
