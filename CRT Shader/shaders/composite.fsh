@@ -8,9 +8,17 @@
 #define BORDER_THICKNESS 0 // [0.0 0.1 0.2]
 #define BLACK_OUT_OF_BOUNDS false // [true false]
 #define POSTERIZATION false // [true false]
+#define POSTERIZATION_STEPS 8 // [4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24]
 #define RED_STRENGTH 1 // [0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0]
 #define GREEN_STRENGTH 1 // [0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0]
 #define BLUE_STRENGTH 1 // [0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0]
+
+
+//SCAN LINES
+#define SCAN_LINES false // [true false]
+#define SCAN_LINE_HEIGHT 0.2 // [0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0]
+#define SCAN_LINE_SPEED 0.4 // [0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0]
+#define SCAN_LINE_INTENSITY 0.2 // [0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0]
 
 in vec2 texCoord;
 
@@ -18,13 +26,26 @@ uniform sampler2D colortex0; // The main color buffer
 
 layout(location = 0) out vec4 fragColor;
 uniform vec2 ScreenSize;
+uniform float frameTimeCounter;
 
 // Adjust these values to fine-tune the effect
 uniform float distortionStrength = DISTORTION_STRENGTH;
 uniform float zoomFactor = ZOOM_FACTOR;
 uniform float maxChromaticAberrationStrength = MAX_CHROMATIC_ABERRATION;
 uniform float maxColorBleedStrength = MAX_COLOR_BLEED;
-uniform int colorLevels = 8; // Posterization levels per channel
+uniform int colorLevels = POSTERIZATION_STEPS; // Posterization levels per channel
+
+float scanlineEffect(vec2 uv, float time) {
+    float scanlineHeight = SCAN_LINE_HEIGHT; // Height of the scanning bar
+    float scanlineSpeed = SCAN_LINE_SPEED; // Speed of the scanning bar
+    float scanlinePosition = mod(time * scanlineSpeed, 1.0 + scanlineHeight) - scanlineHeight;
+
+    float intensity = smoothstep(scanlinePosition, scanlinePosition + scanlineHeight, uv.y) *
+    (1.0 - smoothstep(scanlinePosition + scanlineHeight, scanlinePosition + scanlineHeight * 2.0, uv.y));
+
+    return 1.0 - (intensity * SCAN_LINE_INTENSITY); // Adjust the 0.2 to control the intensity of the effect
+}
+
 
 vec2 applyLensDistortion(vec2 uv) {
     vec2 center = vec2(0.5);
@@ -109,5 +130,9 @@ void main() {
         } else {
             fragColor = color * (vec4(0.0, 0.0, 1.0, 1.0) * vec4(1.0, 1.0, BLUE_STRENGTH, 1.0)); // Blue tint
         }
+    }
+    if (SCAN_LINES) {
+        float scanline = scanlineEffect(texCoord, frameTimeCounter);
+        fragColor.rgb *= scanline;
     }
 }
