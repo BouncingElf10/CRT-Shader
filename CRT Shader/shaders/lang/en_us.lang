@@ -7,4 +7,5 @@ option.MAX_COLOR_BLEED=Color Bleed
 option.RED_STRENGTH=Red Pixel Strength
 option.GREEN_STRENGTH=Green Pixel Strength
 option.BLUE_STRENGTH=Blue Pixel Strength
-
+option.POSTERIZATION=Posterization
+option.BORDER_THICKNESS=Border Thickness
