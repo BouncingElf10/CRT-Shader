@@ -36,14 +36,20 @@ uniform float maxColorBleedStrength = MAX_COLOR_BLEED;
 uniform int colorLevels = POSTERIZATION_STEPS; // Posterization levels per channel
 
 float scanlineEffect(vec2 uv, float time) {
-    float scanlineHeight = SCAN_LINE_HEIGHT; // Height of the scanning bar
-    float scanlineSpeed = SCAN_LINE_SPEED; // Speed of the scanning bar
-    float scanlinePosition = mod(time * scanlineSpeed, 1.0 + scanlineHeight) - scanlineHeight;
+    float scanlineHeight = SCAN_LINE_HEIGHT;
+    float scanlineSpeed = SCAN_LINE_SPEED;
 
-    float intensity = smoothstep(scanlinePosition, scanlinePosition + scanlineHeight, uv.y) *
-    (1.0 - smoothstep(scanlinePosition + scanlineHeight, scanlinePosition + scanlineHeight * 2.0, uv.y));
+    // Calculate the scanline position
+    float scanlinePosition = fract(time * scanlineSpeed);
 
-    return 1.0 - (intensity * SCAN_LINE_INTENSITY); // Adjust the 0.2 to control the intensity of the effect
+    // Calculate distance from the scanline, wrapping around at screen edges
+    float distFromScanline = abs(uv.y - scanlinePosition);
+    distFromScanline = min(distFromScanline, 1.0 - distFromScanline);
+
+    // Create a smooth falloff for the scanline intensity
+    float intensity = 1.0 - smoothstep(0.0, scanlineHeight, distFromScanline);
+
+    return 1.0 - (intensity * SCAN_LINE_INTENSITY);
 }
 
 
