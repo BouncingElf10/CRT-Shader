@@ -15,7 +15,7 @@ in vec2 texCoord;
 uniform sampler2D colortex0; // The main color buffer
 
 layout(location = 0) out vec4 fragColor;
-uniform vec2 screenSize;
+uniform vec2 ScreenSize;
 
 // Adjust these values to fine-tune the effect
 uniform float distortionStrength = DISTORTION_STRENGTH;
@@ -42,7 +42,11 @@ float getEdgeFactor(vec2 uv) {
     return length(uv - center) * 1.3;
 }
 
+
 void main() {
+    // Get the resolution of the screen (or texture)
+    vec2 resolution = textureSize(colortex0, 0);
+
     // Apply zoom
     vec2 zoomedCoord = (texCoord - 0.5) / zoomFactor + 0.5;
 
@@ -60,8 +64,7 @@ void main() {
 
 
     float pixelArea = PIXEL_AREA;
-    //vec2 pixelSize = vec2(pixelArea) / vec2(2560, 1440);
-    vec2 pixelSize = vec2(pixelArea) / vec2(1920, 1080);
+    vec2 pixelSize = vec2(pixelArea) / resolution;
 
     vec2 pixelPos = mod(texCoord, pixelSize);
     vec2 roundedCoord = floor(distortedTexCoord / pixelSize) * pixelSize;
@@ -96,4 +99,5 @@ void main() {
             fragColor = color * (vec4(0.0, 0.0, 1.0, 1.0) * vec4(1.0, 1.0, BLUE_STRENGTH, 1.0)); // Blue tint
         }
     }
+
 }
