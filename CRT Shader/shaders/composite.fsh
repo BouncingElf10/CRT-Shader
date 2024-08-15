@@ -1,9 +1,9 @@
 #version 330 compatibility
 
 #define DISTORTION_STRENGTH 1.5 // [0.0 0.5 1.0 1.5 2.0 2.5 3.0]
-#define ZOOM_FACTOR 1.2 // [0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0 2.1 2.2 2.3 2.4 2.5]
-#define MAX_CHROMATIC_ABERRATION 5 // [0 1 2 3 4 5 6 7 8 9 10]
-#define MAX_COLOR_BLEED 1.0 // [0.0 0.25 0.5 0.75 1.0 1.25 1.5 1.75 2.0]
+#define ZOOM_FACTOR 1.25 // [0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.25 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0 2.1 2.2 2.3 2.4 2.5]
+#define MAX_CHROMATIC_ABERRATION 10 // [0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20]
+#define MAX_COLOR_BLEED 0.5 // [0.0 0.25 0.5 0.75 1.0 1.25 1.5 1.75 2.0]
 #define PIXEL_AREA 3 // [3 4 5 6 7 8 9 10 11 12]
 #define BLACK_OUT_OF_BOUNDS false // [true false]
 #define RED_STRENGTH 1 // [0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0]
@@ -20,8 +20,8 @@ uniform vec2 screenSize;
 // Adjust these values to fine-tune the effect
 uniform float distortionStrength = DISTORTION_STRENGTH;
 uniform float zoomFactor = ZOOM_FACTOR;
-uniform float maxChromaticAberrationStrength = MAX_CHROMATIC_ABERRATION / 1000;
-uniform float maxColorBleedStrength = MAX_COLOR_BLEED / 1000;
+uniform float maxChromaticAberrationStrength = MAX_CHROMATIC_ABERRATION;
+uniform float maxColorBleedStrength = MAX_COLOR_BLEED;
 
 vec2 applyLensDistortion(vec2 uv) {
     vec2 center = vec2(0.5);
@@ -60,7 +60,8 @@ void main() {
 
 
     float pixelArea = PIXEL_AREA;
-    vec2 pixelSize = vec2(pixelArea) / vec2(2560, 1440);
+    //vec2 pixelSize = vec2(pixelArea) / vec2(2560, 1440);
+    vec2 pixelSize = vec2(pixelArea) / vec2(1920, 1080);
 
     vec2 pixelPos = mod(texCoord, pixelSize);
     vec2 roundedCoord = floor(distortedTexCoord / pixelSize) * pixelSize;
@@ -69,8 +70,8 @@ void main() {
     float edgeFactor = getEdgeFactor(distortedTexCoord);
 
     // Apply chromatic aberration and color bleed with increasing strength towards edges
-    float chromaticAberrationStrength = maxChromaticAberrationStrength * edgeFactor;
-    float colorBleedStrength = maxColorBleedStrength * edgeFactor;
+    float chromaticAberrationStrength = (maxChromaticAberrationStrength / 1000) * edgeFactor;
+    float colorBleedStrength = (maxColorBleedStrength / 150) * edgeFactor;
 
     vec2 redOffset = vec2(chromaticAberrationStrength, 0);
     vec2 blueOffset = vec2(-chromaticAberrationStrength, 0);
