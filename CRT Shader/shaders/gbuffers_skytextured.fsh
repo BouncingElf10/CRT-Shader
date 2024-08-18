@@ -1,33 +1,36 @@
-#version 330 compatibility
+/*
+    XorDev's "Default Shaderpack"
 
-in vec2 texCoord;
-in vec2 lightCoord;
-in vec4 vertexColor;
-in float vertexDistance;
-in float vertexPosition;
-// Add some new uniforms and your in statement
-in vec3 normal;
+    This was put together by @XorDev to make it easier for anyone to make their own shaderpacks in Minecraft (Optifine).
+    You can do whatever you want with this code! Credit is not necessary, but always appreciated!
 
-// Our new textures!
-uniform sampler2D gtexture;
-uniform sampler2D lightmap;
+    You can find more information about shaders in Optfine here:
+    https://github.com/sp614x/optifine/blob/master/OptiFineDoc/doc/shaders.txt
 
-uniform float fogStart;
-uniform float fogEnd;
-uniform vec3 fogColor;
+*/
+//Declare GL version.
+#version 120
 
-layout(location = 0) out vec4 pixelColor;
+//Diffuse (color) texture.
+uniform sampler2D texture;
 
+//0-1 amount of blindness.
+uniform float blindness;
+//0 = default, 1 = water, 2 = lava.
+uniform int isEyeInWater;
 
-void main() {
-    vec4 texColor = texture(gtexture, texCoord);
-    if (texColor.a < 0.1) discard;
-    vec4 lightColor = texture(lightmap, lightCoord);
+//Vertex color.
+varying vec4 color;
+//Diffuse texture coordinates.
+varying vec2 coord0;
 
-    // Calculate our new fog color!
-    float fogValue = vertexPosition < fogEnd ? smoothstep(fogStart, fogEnd, vertexPosition) : 1.0;
+void main()
+{
+    //Visibility amount.
+    vec3 light = vec3(1.-blindness);
+    //Sample texture times Visibility.
+    vec4 col = color * vec4(light,1) * texture2D(texture,coord0);
 
-    vec4 finalColor = texColor * lightColor * vertexColor;
-
-    pixelColor = vec4(mix(finalColor.xyz, fogColor, fogValue), finalColor.a);
+    //Output the result.
+    gl_FragData[0] = col;
 }
