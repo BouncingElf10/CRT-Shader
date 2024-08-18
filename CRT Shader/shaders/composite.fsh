@@ -121,7 +121,6 @@ void main() {
         color = applyPosterization(color, colorLevels);
     }
 
-
     float borderThickness = 0.1;
     bool isBorder = (pixelPos.x < borderThickness * pixelSize.x || pixelPos.x > (1.0 - borderThickness) * pixelSize.x ||
     pixelPos.y < borderThickness * pixelSize.y || pixelPos.y > (1.0 - borderThickness) * pixelSize.y);

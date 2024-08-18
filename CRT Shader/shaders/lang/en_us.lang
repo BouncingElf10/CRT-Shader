@@ -14,3 +14,4 @@ option.SCAN_LINES=Scan Line
 option.SCAN_LINE_HEIGHT=Scan Line Thickness
 option.SCAN_LINE_SPEED=Scan Line Speed
 option.SCAN_LINE_INTENSITY=Scan Line Intensity
+screen.SCAN_LINES=Scan Line
