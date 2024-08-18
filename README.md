@@ -12,7 +12,7 @@ While there still are limitied options I aimed to add as much customibitlity as 
 
 ### Warings
 
-While I dont see how this wouldnt work with Optifine / older versions, I still havent tested it so there is no guarantee it would work.
+This shader should work with Optifine and Iris from 1.8.9 - 1.20.1, if you encounter any issues you can allways report them :D
 
 Also from experience this shader does strain your eyes if you play with it on for hours on end.
 
